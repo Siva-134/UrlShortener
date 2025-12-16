@@ -6,6 +6,7 @@ const app=express()
 mongoose.connect('mongodb://localhost/urlShortener')
 app.set('view engine' , 'ejs')
 app.use(express.urlencoded({extended:false}))
+app.use(express.static('public'))
 app.get('/' ,async (req,res)=>{
     const shortUrls = await ShortUrl.find()
     res.render('index',{shortUrls:shortUrls})
@@ -22,6 +23,12 @@ app.get('/:shortUrl', async(req,res)=>{
     if(shortUrl==null) return res.sendStatus(404)
      
     shortUrl.Clicks++
+    await shortUrl.save()
     res.redirect(shortUrl.full)
 })
-app.listen(process.env.port || 5000) 
+
+app.post('/shortUrls/delete/:id', async (req, res) => {
+    await ShortUrl.findByIdAndDelete(req.params.id)
+    res.redirect('/')
+})
+app.listen(process.env.port || 5000)
